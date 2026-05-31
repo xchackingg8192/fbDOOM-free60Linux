@@ -1,0 +1,39 @@
+name: Cross-Compile fbDOOM for PowerPC
+
+on:
+  push:
+    branches: [ "master", "main" ]
+  workflow_dispatch: # Permet de lancer la compilation manuellement d'un clic sur GitHub
+
+jobs:
+  build-powerpc:
+    runs-on: ubuntu-24.04
+
+    steps:
+    - name: Récupérer le code source
+      uses: actions/checkout@v4
+
+    - name: Installer la toolchain PowerPC Linux officielle
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y gcc-powerpc-linux-gnu make
+
+    - name: Ajuster le Makefile pour utiliser le bon compilateur Linux PowerPC
+      run: |
+        cd fbdoom
+        # On remplace le compilateur par défaut par celui d'Ubuntu
+        sed -i 's/CROSS_COMPILE ?=/CROSS_COMPILE = powerpc-linux-gnu-/g' Makefile
+        # On force l'arrêt de SDL
+        sed -i 's/CC=$(CROSS_COMPILE)gcc/NOSDL=1\nCC=$(CROSS_COMPILE)gcc/g' Makefile
+
+    - name: Compiler fbDOOM
+      run: |
+        cd fbdoom
+        make clean
+        make
+
+    - name: Sauvegarder l'exécutable compilé (Artifact)
+      uses: actions/upload-artifact@v4
+      with:
+        name: fbdoom-powerpc-binary
+        path: fbdoom/fbdoom
