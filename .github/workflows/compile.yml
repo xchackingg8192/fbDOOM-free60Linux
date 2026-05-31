@@ -3,7 +3,7 @@ name: Cross-Compile fbDOOM for PowerPC
 on:
   push:
     branches: [ "master", "main" ]
-  workflow_dispatch: # Permet de lancer la compilation manuellement d'un clic sur GitHub
+  workflow_dispatch:
 
 jobs:
   build-powerpc:
@@ -18,12 +18,12 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y gcc-powerpc-linux-gnu make
 
-    - name: Compiler fbDOOM avec les bonnes variables
+    - name: Compiler fbDOOM en mode STATIQUE (pour compatibilité vieil Ubuntu)
       run: |
         cd fbdoom
-        # On lance make en lui passant directement les variables par injection (plus propre que sed !)
         make clean
-        make CROSS_COMPILE=powerpc-linux-gnu- NOSDL=1
+        # LDFLAGS="-static" dit au compilateur de ne pas dépendre de la GLIBC du système cible
+        make CROSS_COMPILE=powerpc-linux-gnu- NOSDL=1 LDFLAGS="-static -Wl,--gc-sections"
 
     - name: Sauvegarder l'exécutable compilé (Artifact)
       uses: actions/upload-artifact@v4
