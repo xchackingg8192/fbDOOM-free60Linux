@@ -1,4 +1,4 @@
-name: Cross-Compile fbDOOM for PowerPC
+name: Cross-Compile fbDOOM for PowerPC (SDL Mode)
 
 on:
   push:
@@ -13,20 +13,21 @@ jobs:
     - name: Récupérer le code source
       uses: actions/checkout@v4
 
-    - name: Installer la toolchain PowerPC Linux officielle
+    - name: Installer la toolchain et SDL
       run: |
         sudo apt-get update
-        sudo apt-get install -y gcc-powerpc-linux-gnu make
+        # On installe la toolchain ET les bibliothèques de développement SDL pour PowerPC
+        sudo apt-get install -y gcc-powerpc-linux-gnu libsdl1.2-dev:powerpc-linux-gnu make
 
-    - name: Compiler fbDOOM en mode STATIQUE (pour compatibilité vieil Ubuntu)
+    - name: Compiler fbDOOM en version SDL légitime
       run: |
         cd fbdoom
         make clean
-        # LDFLAGS="-static" dit au compilateur de ne pas dépendre de la GLIBC du système cible
-        make CROSS_COMPILE=powerpc-linux-gnu- NOSDL=1 LDFLAGS="-static -Wl,--gc-sections"
+        # NOSDL=0 active le mode SDL (fenêtré/propre) au lieu du framebuffer brut
+        make CROSS_COMPILE=powerpc-linux-gnu- NOSDL=0 LDFLAGS="-static -lSDL -lpthread"
 
-    - name: Sauvegarder l'exécutable compilé (Artifact)
+    - name: Sauvegarder l'exécutable
       uses: actions/upload-artifact@v4
       with:
-        name: fbdoom-powerpc-binary
+        name: fbdoom-sdl-binary
         path: fbdoom/fbdoom
